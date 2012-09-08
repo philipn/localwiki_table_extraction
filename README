@@ -1,0 +1,3 @@
+This is (or will be) a small app that will extract all information contained
+in "infobox-like" tables on a LocalWiki.  The app will produce a
+loosely-structured result of some sort.
