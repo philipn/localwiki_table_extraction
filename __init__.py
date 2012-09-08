@@ -2,13 +2,14 @@ import slumber
 from colors import rgb
 import html5lib
 import lxml.html
+from collections import defaultdict
 from lxml.html.clean import Cleaner
 from lxml import etree
 from urlparse import urljoin
 
 from utils import all
 
-SITE = "http://trianglewiki.org/"
+SITE = "http://tasmania.localwiki.org/"
 
 # We need some hints to figure out where the info table is
 COLOR_HINT = rgb(232, 236, 239)
@@ -16,8 +17,6 @@ COLOR_HINT = rgb(232, 236, 239)
 api_endpoint = urljoin(SITE, 'api/')
 
 api = slumber.API(api_endpoint)
-
-page_data = {}
 
 
 def strip_html(s):
@@ -50,13 +49,17 @@ def extract_attrs_from_table(table):
             for elem in td.iterchildren():
                 key += etree.tostring(elem)
         else:
+            if td.text:
+                value += td.text.strip()
             for elem in td.iterchildren():
                 value += etree.tostring(elem)
+            if td.tail:
+                value += td.tail.strip()
 
     if value:
         data[strip_html(key)] = value
 
-    return {}
+    return data
 
 
 def extract_attributes(html):
@@ -93,9 +96,15 @@ def normalize_value(value):
     return value
 
 
-for page in all(api.page.get):
-    pagename = page['name']
-    print pagename
-    for k, v in extract_attributes(page['content']):
-        page_data[pagename][normalize_key(k)] = normalize_value(v)
-        print normalize_key(k), normalize_value(v)
+def get_data():
+    page_data = defaultdict(dict)
+    for page in all(api.page.get):
+        pagename = page['name']
+        print pagename
+        for k, v in extract_attributes(page['content']).iteritems():
+            page_data[pagename][normalize_key(k)] = normalize_value(v)
+    return page_data
+
+
+if __name__ == '__main__':
+    print get_data()
