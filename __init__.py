@@ -88,7 +88,17 @@ def extract_attributes(html):
     return {}
 
 
+_normalized_keys = {}
+
+
 def normalize_key(key):
+    def _fix(s):
+        return s.lower()
+
+    key = key.strip()
+    if _normalized_keys.get(_fix(key)) is not None:
+        return _normalized_keys[_fix(key)]
+    _normalized_keys[_fix(key)] = key
     return key
 
 
