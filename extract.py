@@ -9,7 +9,7 @@ from urlparse import urljoin
 
 from utils import all
 
-SITE = "http://tasmania.localwiki.org/"
+SITE = "http://127.0.0.1:8000/"
 
 # We need some hints to figure out where the info table is
 COLOR_HINT = rgb(232, 236, 239)
@@ -42,7 +42,10 @@ def extract_attrs_from_table(table):
                 # with the key.
 
                 # Strip HTML from key.
-                data[strip_html(key)] = value
+                try:
+                    data[strip_html(key)] = value
+                except:
+                    pass
                 value = ''
 
             key = ''
@@ -57,17 +60,21 @@ def extract_attrs_from_table(table):
                 value += td.tail.strip()
 
     if value:
-        data[strip_html(key)] = value
+        try:
+            data[strip_html(key)] = value
+        except:
+            pass
 
     return data
 
 
-def extract_attributes(html):
+def find_info_table(html):
     """
-    @attr html: HTML, provided as a string.
+    Attributes:
+        html: HTML, provided as a string.
 
-    @returns: A dictionary of attribute -> value pairs, extracted from
-              the table that's the likely "infobox" on the page.
+    Returns:
+        An html table element, or None.
     """
     # Heuristic: if the page has a table with its first row's
     # background color set to COLOR_HINT => we assume it's an info table.
@@ -84,7 +91,24 @@ def extract_attributes(html):
             COLOR_HINT.red, COLOR_HINT.green, COLOR_HINT.blue)
         if style in first_td.attrib.get('style', ''):
             # It's a match
-            return extract_attrs_from_table(table)
+            return table
+
+
+def extract_attributes(html):
+    """"
+    Attributes:
+        html: HTML, provided as a string.
+
+    Returns:
+        A dictionary of attribute -> value pairs, extracted from
+        the table that's the likely "infobox" on the page.
+    """
+    try:
+        table = find_info_table(html)
+    except:
+        return {}
+    if table:
+        return extract_attrs_from_table(table)
     return {}
 
 
